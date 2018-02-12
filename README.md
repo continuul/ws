@@ -18,16 +18,29 @@ curl -sSL https://github.com/continuul/ws/releases/download/v1.0/web.install.bas
 
 Basic ws usage scenarios include installing and switching between different workspaces.
 
+Command line help does exist, if you have questions about other options.
 
 ### Creating a workspace
 
 To create a workspace you have to call `ws WORKSPACE_NAME OPTIONS` 
 
+### Listing workspaces
+
+To list your workspaces you have to call `ws ls`
+
 ### Switching between workspaces
 
 To switch between workspaces you should call
 
-`ws use WORKSPACE`
+`ws use WORKSPACE_NAME`
+
+### Removing workspaces
+
+To remove a workspaces you should call
+
+`ws rm WORKSPACE_NAME`
+
+n.b. this is a destructive call and removes all files associated to the workspace
 
 ### File an issue
 
