@@ -3,13 +3,7 @@
 set -e
 
 VERSION="1.0.0"
-WS_PREFIX=${WS_PREFIX-$(realpath ~/w)}
-WORKSPACES_DIR=$WS_PREFIX/workspaces
 QUIET=true
-
-for dir in ${WORKSPACES_DIR[@]}; do
-  test -d $dir || mkdir -p $dir
-done
 
 log() {
   printf "  \033[36m%10s\033[0m : \e[2m%s\e[22m\033[0m\n" $1 $2
@@ -87,7 +81,7 @@ activate() {
   local workspace=$1
   check_current_workspace
   if test "$workspace" != "$active"; then
-    local dir=$WORKSPACES_DIR/$workspace
+    local dir=$(__ws_dir)/$workspace
     cd $dir/src
     bash --init-file $dir/bin/activate
   fi
@@ -105,14 +99,15 @@ remove_workspace() {
   while test $# -ne 0; do
     local workspace=${1#v}
     [ "$workspace" == "$active" ] && abort "cannot remove currently active workspace ($active)"
-    rm -rf ${WORKSPACES_DIR}/$workspace
+    rm -rf $(__ws_dir)/$workspace
     shift
   done
 }
 
 create_workspace() {
+  . $(__ws_home)/.wsattr
   local workspace=${1#v}
-  local dir=${WORKSPACES_DIR[$DEFAULT]}/$workspace
+  local dir=$(__ws_dir)/$workspace
 
   # if the workspace already exists, activate it and exit
   if test -d $dir; then
@@ -125,7 +120,7 @@ create_workspace() {
   fi
 
   # install a new workspace
-  log install ${SCOPES[$DEFAULT]}/$workspace
+  log install $(__ws_dir)/$workspace
 
   log mkdir $dir
   mkdir -p $dir
@@ -138,6 +133,8 @@ create_workspace() {
   fi
 
   # add template expansion, template support here...
+
+  echo $PATH
 
   cat << EOF > $dir/bin/activate
 export WS_ENV=$(realpath $dir)
@@ -159,8 +156,8 @@ EOF
 }
 
 workspaces_paths() {
-  find $WORKSPACES_DIR -mindepth 1 -maxdepth 1 -type d \
-    | sed 's|'$WORKSPACES_DIR'/||g' \
+  find $(__ws_dir) -mindepth 1 -maxdepth 1 -type d \
+    | sed 's|'$(__ws_dir)'/||g' \
     | sort
 }
 
