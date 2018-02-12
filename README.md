@@ -2,18 +2,18 @@
 
 Workspace management tool, NVM/RVM style.
 
-# What's WS
+# What's ws
 
 WS is the acronym for Workspace. It manages development workspace environments and enables switching between them.
 
-## Installing W
+## Installing ws
 
 ### Ubuntu / Mac
 
 
-## Basic WS usage
+## Basic ws usage
 
-Basic WS usage scenarios include installing and switching between different workspaces.
+Basic ws usage scenarios include installing and switching between different workspaces.
 
 
 ### Creating a workspace
