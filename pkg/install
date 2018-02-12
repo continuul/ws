@@ -32,6 +32,8 @@ then
 EOF
 fi
 
+echo $(date) > $HOME/.ws/when.installed
+
 cat <<- EOF > $WS_HOME/uninstall
 : ${WS_HOME:="$WS_HOME"}
 rm -fr $WS_HOME
