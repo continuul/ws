@@ -140,7 +140,7 @@ export WS_WORKSPACE=$workspace
 export WORKSPACE=$(realpath $dir/src)
 export TZ=UTC
 export GOPATH=$(realpath ../)
-export PATH=$PATH:/usr/local/go/bin:\$GOPATH/bin
+export PATH=$PATH:/usr/local/go/bin:$(realpath $dir)/bin
 EOF
 
   [ $QUIET == false ] && erase_line
