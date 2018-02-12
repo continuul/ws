@@ -134,8 +134,6 @@ create_workspace() {
 
   # add template expansion, template support here...
 
-  echo $PATH
-
   cat << EOF > $dir/bin/activate
 export WS_ENV=$(realpath $dir)
 export WS_WORKSPACE=$workspace
