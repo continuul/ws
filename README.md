@@ -62,6 +62,10 @@ NOT** change the `WORKSPACES_DIR` environment variable to be the same directory 
 the ws installation itself; if you do so, when you uninstall ws you will delete
 your workspaces as well.
 
+## Contributing
+
+You are very warmly welcome to help. Please send us pull requests for fixes you have. 
+
 ### File an issue
 
 If the documentation is not clear, an error message is not clear or you are stuck with the problem,
@@ -78,10 +82,6 @@ Otherwise it's hard for us to process all the information and respond quickly.
 
 Note that if there is a lot of `debug` or `trace` output you can redirect it to a file with the `>` 
 character like `ws [command] > output.txt`.
-
-## Contributing
-
-You are very warmly welcome to help. Please send us pull requests for fixes you have. 
 
 ## License
 
