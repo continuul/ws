@@ -14,6 +14,16 @@ WS is the acronym for Workspace. It manages development workspace environments a
 curl -sSL https://github.com/continuul/ws/releases/download/stable/web.install.bash | bash
 ```
 
+## Uninstalling ws
+
+### Ubuntu / Mac
+
+The uninstalling ws will NOT delete your workspaces directory, it only uninstalls ws itself.
+
+```bash
+cat $(ws --home)/uninstall | bash
+```
+
 ## Basic ws usage
 
 Basic ws usage scenarios include installing and switching between different workspaces.
@@ -41,6 +51,16 @@ To remove a workspaces you should call
 `ws rm WORKSPACE_NAME`
 
 n.b. this is a destructive call and removes all files associated to the workspace
+
+## Customizing ws
+
+### Custom workspaces directory
+
+If you want to change the default location of the workspaces directory, simply
+edit the property listed in `~/.ws/.wsattr`. We strongly recommend that you *DO
+NOT* change the WORKSPACES_DIR environment variable to be the same directory as
+the ws installation itself; if you do so, when you uninstall ws you will delete
+your workspaces as well.
 
 ### File an issue
 
