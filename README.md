@@ -57,8 +57,8 @@ n.b. this is a destructive call and removes all files associated to the workspac
 ### Custom workspaces directory
 
 If you want to change the default location of the workspaces directory, simply
-edit the property listed in `~/.ws/.wsattr`. We strongly recommend that you *DO
-NOT* change the WORKSPACES_DIR environment variable to be the same directory as
+edit the property listed in `~/.ws/.wsattr`. We strongly recommend that you **DO
+NOT** change the `WORKSPACES_DIR` environment variable to be the same directory as
 the ws installation itself; if you do so, when you uninstall ws you will delete
 your workspaces as well.
 
