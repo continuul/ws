@@ -11,7 +11,7 @@ WS is the acronym for Workspace. It manages development workspace environments a
 ### Ubuntu / Mac
 
 ```bash
-curl -sSL https://github.com/continuul/ws/releases/download/v1.0/web.install.bash | bash
+curl -sSL https://github.com/continuul/ws/releases/download/stable/web.install.bash | bash
 ```
 
 ## Basic ws usage
