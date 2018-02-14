@@ -139,7 +139,7 @@ export WS_ENV=$(realpath $dir)
 export WS_WORKSPACE=$workspace
 export WORKSPACE=$(realpath $dir/src)
 export TZ=UTC
-export GOPATH=$(realpath ../)
+export GOPATH=$dir
 export PATH=$PATH:/usr/local/go/bin:$(realpath $dir)/bin
 EOF
 
