@@ -1,0 +1,1 @@
+cd $(realpath $dir/src) && git clone https://github.com/continuul/ws.git

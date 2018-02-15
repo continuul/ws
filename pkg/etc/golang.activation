@@ -1,0 +1,2 @@
+export GOPATH=$WS_ENV
+export PATH=$GOPATH/bin:/usr/local/go/bin:$PATH

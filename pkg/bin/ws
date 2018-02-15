@@ -50,7 +50,6 @@ __ws_home ()
     echo "$ws_home"
 }
 
-
 __ws_attr ()
 {
 	if [ -z "${1-}" ]; then
@@ -74,6 +73,11 @@ __ws_dir ()
 {
   . $(__ws_attr)
   echo ${WORKSPACES_DIR:=$HOME/workspaces}
+}
+
+__cur_dir ()
+{
+  echo $(__ws_dir)/$workspace
 }
 
 activate() {
@@ -139,9 +143,22 @@ export WS_ENV=$(realpath $dir)
 export WS_WORKSPACE=$workspace
 export WORKSPACE=$(realpath $dir/src)
 export TZ=UTC
-export GOPATH=$dir
-export PATH=$PATH:/usr/local/go/bin:$(realpath $dir)/bin
+export PATH=$PATH:$(realpath $dir)/bin
 EOF
+
+  for once in $(__ws_home)/etc/*.once; do
+    . $once
+  done
+
+  for activation in $(__ws_home)/etc/*.activation; do
+    cat << EOF >> $dir/bin/activate
+# Template-Start: $(basename $activation .activation)
+EOF
+    cat $activation >> $dir/bin/activate
+    cat << EOF >> $dir/bin/activate
+# Template-End: $(basename $activation .activation)
+EOF
+  done
 
   [ $QUIET == false ] && erase_line
   rm -f $dir/w.lock
@@ -314,4 +331,3 @@ else
     shift
   done
 fi
-
