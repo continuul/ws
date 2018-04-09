@@ -1,2 +1,1 @@
 cd $(realpath $dir/bin) && curl -Lo lein https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein && chmod +x lein
-
