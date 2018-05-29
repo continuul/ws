@@ -143,7 +143,7 @@ export WS_ENV=$(realpath $dir)
 export WS_WORKSPACE=$workspace
 export WORKSPACE=$(realpath $dir/src)
 export TZ=UTC
-export PATH=$PATH:$(realpath $dir)/bin
+export PATH="$PATH:$(realpath $dir)/bin"
 EOF
 
   for once in $(__ws_home)/etc/*.once; do
