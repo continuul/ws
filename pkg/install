@@ -27,7 +27,7 @@ then
     cat <<- EOF >> ~/.bash_profile
 	# WS-Start
 	export WS_HOME=$WS_HOME
-	export PATH=\$WS_HOME/bin:\$PATH
+	export PATH="\$WS_HOME/bin:\$PATH"
 	# WS-End
 EOF
 fi
