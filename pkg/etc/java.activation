@@ -1,2 +1,7 @@
-export JAVA_HOME="$(/usr/libexec/java_home --version 1.8)"
+if [ "$(uname)" == "Darwin" ]; then
+  export JAVA_HOME="$(/usr/libexec/java_home --version 1.8)"
+elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+  export JAVA_HOME=$(dirname $(dirname $(readlink -e /usr/bin/javac)))
+fi
+
 export PATH="$JAVA_HOME/bin:$PATH"
