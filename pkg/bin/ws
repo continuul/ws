@@ -2,7 +2,7 @@
 
 set -e
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 QUIET=true
 
 log() {
@@ -146,19 +146,25 @@ export TZ=UTC
 export PATH="$PATH:$(realpath $dir)/bin"
 EOF
 
-  for once in $(__ws_home)/etc/*.once; do
-    . $once
-  done
+  (
+    . $dir/bin/activate
 
-  for activation in $(__ws_home)/etc/*.activation; do
-    cat << EOF >> $dir/bin/activate
-# Template-Start: $(basename $activation .activation)
-EOF
-    cat $activation >> $dir/bin/activate
-    cat << EOF >> $dir/bin/activate
-# Template-End: $(basename $activation .activation)
-EOF
-  done
+    for once in $(__ws_home)/etc/*.once; do
+      log once $once
+      . $once
+    done
+
+    for activation in $(__ws_home)/etc/*.activation; do
+      log activation $activation
+      cat << EOF >> $dir/bin/activate
+  # Template-Start: $(basename $activation .activation)
+  EOF
+      cat $activation >> $dir/bin/activate
+      cat << EOF >> $dir/bin/activate
+  # Template-End: $(basename $activation .activation)
+  EOF
+    done
+  )
 
   [ $QUIET == false ] && erase_line
   rm -f $dir/w.lock
