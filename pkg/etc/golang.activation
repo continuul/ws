@@ -1,3 +1,2 @@
 export GOPATH=$WS_ENV
 export PATH="$GOPATH/bin:/usr/local/go/bin:$PATH"
-curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
