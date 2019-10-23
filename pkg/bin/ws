@@ -2,7 +2,7 @@
 
 set -e
 
-VERSION="1.1.0"
+VERSION="a.b.c"
 QUIET=true
 
 log() {
