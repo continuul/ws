@@ -101,7 +101,7 @@ remove_workspace() {
   test -z $1 && abort "workspace(s) required"
   check_current_workspace
   while test $# -ne 0; do
-    local workspace=${1#v}
+    local workspace="${1}"
     [ "$workspace" == "$active" ] && abort "cannot remove currently active workspace ($active)"
     rm -rf $(__ws_dir)/$workspace
     shift
@@ -110,7 +110,7 @@ remove_workspace() {
 
 create_workspace() {
   . $(__ws_home)/.wsattr
-  local workspace=${1#v}
+  local workspace="${1}"
   local dir=$(__ws_dir)/$workspace
 
   # if the workspace already exists, activate it and exit
