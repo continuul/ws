@@ -6,19 +6,14 @@ Workspace management: no subshells, no profile setup, **simply extensible**.
 
 (Note: `ws` is not supported natively on Windows.)
 
-- [`ws` – Interactively Manage Your Development Workspaces](#n-%e2%80%93-interactively-manage-your-nodejs-versions)
+- [`ws` – Interactively Manage Your Development Workspaces](#ws-%e2%80%93-interactively-manage-your-development-workspaces)
     - [Installation](#installation)
         - [Third Party Installers](#third-party-installers)
-    - [Installing Node Versions](#installing-node-versions)
-    - [Specifying Node Versions](#specifying-node-versions)
+    - [Creating Workspaces](#creating-workspaces)
+    - [Removing Workspaces](#removing-workspaces)
     - [Removing Versions](#removing-versions)
-    - [Using Downloaded Node Versions Without Reinstalling](#using-downloaded-node-versions-without-reinstalling)
-    - [Preserving npm](#preserving-npm)
     - [Miscellaneous](#miscellaneous)
-    - [Custom Source](#custom-source)
-    - [Custom Architecture](#custom-architecture)
     - [Optional Environment Variables](#optional-environment-variables)
-    - [How It Works](#how-it-works)
 
 ## Installation
 
