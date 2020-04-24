@@ -1,0 +1,706 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2155
+# Disabled "Declare and assign separately to avoid masking return values": https://github.com/koalaman/shellcheck/wiki/SC2155
+
+#
+# Log <type> <msg>
+#
+
+log() {
+  printf "  ${SGR_CYAN}%10s${SGR_RESET} : ${SGR_FAINT}%s${SGR_RESET}${SGR_RESET}\n" "$1" "$2"
+}
+
+#
+# Exit with the given <msg ...>
+#
+
+abort() {
+  >&2 printf "\n  ${SGR_RED}Error: %s${SGR_RESET}\n\n" "$*" && exit 1
+}
+
+#
+# Synopsis: trace message ...
+# Debugging output to stderr, not used in production code.
+#
+
+function trace() {
+  >&2 printf "trace: %s\n" "$*"
+}
+
+#
+# Synopsis: echo_red message ...
+# Highlight message in colour (on stdout).
+#
+
+function echo_red() {
+  printf "${SGR_RED}%s${SGR_RESET}\n" "$*"
+}
+
+#
+# Setup and state
+#
+
+VERSION="v6.6.0"
+
+WS_PREFIX="${WS_PREFIX-$HOME/ws}"
+WS_PREFIX=${WS_PREFIX%/}
+readonly WS_PREFIX
+readonly WORKSPACES_DIR=$WS_PREFIX/workspaces
+
+# Set by set_active_node
+g_active_workspace=
+
+ACTIVATE=true
+
+# ANSI escape codes
+# https://en.wikipedia.org/wiki/ANSI_escape_code
+# http://no-color.org
+# https://bixense.com/clicolors
+
+USE_COLOR="true"
+if [[ -n "${CLICOLOR_FORCE+defined}" && "${CLICOLOR_FORCE}" != "0" ]]; then
+  USE_COLOR="true"
+elif [[ -n "${NO_COLOR+defined}" || "${CLICOLOR}" = "0" || ! -t 1 ]]; then
+  USE_COLOR="false"
+fi
+readonly USE_COLOR
+# Select Graphic Rendition codes
+if [[ "${USE_COLOR}" = "true" ]]; then
+  # KISS and use codes rather than tput, avoid dealing with missing tput or TERM.
+  readonly SGR_RESET="\033[0m"
+  readonly SGR_FAINT="\033[2m"
+  readonly SGR_RED="\033[31m"
+  readonly SGR_CYAN="\033[36m"
+else
+  readonly SGR_RESET=
+  readonly SGR_FAINT=
+  readonly SGR_RED=
+  readonly SGR_CYAN=
+fi
+
+#
+# Synopsis: is_lts_codename version
+#
+
+function is_lts_codename() {
+  # https://github.com/nodejs/Release/blob/master/CODENAMES.md
+  # e.g. argon, Boron
+  [[ "$1" =~ ^([Aa]rgon|[Bb]oron|[Cc]arbon|[Dd]ubnium|[Ee]rbium|[Ff]ermium|[Gg]allium|[Hh]ydrogen|[Ii]ron)$ ]]
+}
+
+#
+# Synopsis: is_download_folder version
+#
+
+function is_download_folder() {
+  # e.g. nightly
+  [[ "$1" =~ ^(chakracore-nightly|chakracore-rc|chakracore-release|next-nightly|nightly|rc|release|test|v8-canary)$ ]]
+}
+
+#
+# Synopsis: is_download_version version
+#
+
+function is_download_version() {
+  # e.g. nightly/, nightly/latest, nightly/v11
+  if [[ "$1" =~ ^([^/]+)/(.*) ]]; then
+    local remote_folder="${BASH_REMATCH[1]}"
+    is_download_folder "${remote_folder}"
+    return
+  fi
+  return 2
+}
+
+#
+# Synopsis: is_numeric_version version
+#
+
+function is_numeric_version() {
+  # e.g. 6, v7.1, 8.11.3
+  [[ "$1" =~ ^[v]{0,1}[0-9]+(\.[0-9]+){0,2}$ ]]
+}
+
+#
+# Synopsis: is_exact_numeric_version version
+#
+
+function is_exact_numeric_version() {
+  # e.g. 6, v7.1, 8.11.3
+  [[ "$1" =~ ^[v]{0,1}[0-9]+\.[0-9]+\.[0-9]+$ ]]
+}
+
+#
+# Functions used when showing versions installed
+#
+
+enter_fullscreen() {
+  # Set cursor to be invisible
+  tput civis 2> /dev/null
+  # Save screen contents
+  tput smcup 2> /dev/null
+  stty -echo
+}
+
+leave_fullscreen() {
+  # Set cursor to normal
+  tput cnorm 2> /dev/null
+  # Restore screen contentsq
+  tput rmcup 2> /dev/null
+  stty echo
+}
+
+handle_sigint() {
+  leave_fullscreen
+  S="$?"
+  kill 0
+  exit $S
+}
+
+handle_sigtstp() {
+  leave_fullscreen
+  kill -s SIGSTOP $$
+}
+
+#
+# Output usage information.
+#
+
+display_help() {
+  cat <<-EOF
+
+Usage: ws [options] [COMMAND] [args]
+
+Commands:
+
+  ws                              Display local workspaces and activate selection
+  ws <workspace>                  Create workspace <workspace> (downloading plugins if necessary)
+  ws run <workspace> [args ...]   Execute downloaded node <version> with [args ...]
+  ws which <workspace>            Output path for local workspace
+  ws exec <work> <cmd> [args...]  Execute command with modified PATH, so downloaded node <version> and npm first
+  ws rm <workspace ...>           Remove the given workspace(s)
+  ws prune                        Remove all downloaded versions except the installed version
+  ws --latest                     Output the latest node version available
+  ws --lts                        Output the latest LTS node version available
+  ws ls                           Output list of workspaces
+  ws uninstall                    Remove the installed node and npm
+
+Options:
+
+  -V, --version         Output version of ws
+  -h, --help            Display help information
+  -q, --quiet           Disable curl output (if available)
+  --insecure            Turn off certificate checking for https requests (may be needed from behind a proxy server)
+
+Aliases:
+
+  which: bin
+  run: use, as
+  ls: list
+  rm: -
+  latest: current
+
+EOF
+}
+
+err_no_workspaces_print_help() {
+  display_help
+  abort "no created workspaces yet, see above help for commands"
+}
+
+#
+# Synopsis: next_local_workspace selected_version
+# Output version after selected (which may be blank under some circumstances).
+#
+
+function next_local_workspace() {
+  display_local_workspaces | grep "$1" -A 1 | tail -n 1
+}
+
+#
+# Synopsis: prev_local_workspace selected_version
+# Output version before selected  (which may be blank under some circumstances).
+#
+
+function prev_local_workspace() {
+  display_local_workspaces | grep "$1" -B 1 | head -n 1
+}
+
+#
+# Output ws version.
+#
+
+display_ws_version() {
+  echo "$VERSION" && exit 0
+}
+
+#
+# Synopsis: set_active_workspace
+# Checks local workspaces for a binary matching the active node.
+# Globals modified:
+# - g_active_workspace
+#
+
+function set_active_workspace() {
+  g_active_workspace=
+  local workspace_path="$WORKSPACE_PATH"
+  if [[ -x "${workspace_path}" ]]; then
+    g_active_workspace=(`basename "${workspace_path}"`)
+  fi
+}
+
+#
+# Display sorted versions directories paths.
+#
+
+display_workspaces_paths() {
+  find "$WORKSPACES_DIR" -mindepth 1 -maxdepth 1 -type d \
+    | sed 's|'"$WORKSPACES_DIR"'/||g' \
+    | sort
+}
+
+#
+# Display installed workspaces with <selected>
+#
+
+display_workspaces_with_selected() {
+  local selected="$1"
+  echo
+  for workspace in $(display_workspaces_paths); do
+    if test "$workspace" = "$selected"; then
+      printf "  ${SGR_CYAN}ο${SGR_RESET} %s\n" "$workspace"
+    else
+      printf "    ${SGR_FAINT}%s${SGR_RESET}\n" "$workspace"
+    fi
+  done
+  echo
+  printf "Use up/down arrow keys to select a workspace, return key to activate, d to delete, q to quit"
+}
+
+#
+# Synopsis: display_local_workspaces
+#
+
+function display_local_workspaces() {
+  for folder_and_version in $(display_workspaces_paths); do
+    echo "${folder_and_version}"
+  done
+}
+
+#
+# Display current node --version and others installed.
+#
+
+menu_select_local_workspaces() {
+  enter_fullscreen
+  set_active_workspace
+  local selected="${g_active_workspace}"
+  echo $selected
+
+  clear
+  display_workspaces_with_selected "${selected}"
+
+  trap handle_sigint INT
+  trap handle_sigtstp SIGTSTP
+
+  ESCAPE_SEQ=$'\033'
+  UP=$'A'
+  DOWN=$'B'
+
+  while true; do
+    read -rsn 1 key
+    case "$key" in
+      $ESCAPE_SEQ)
+        # Handle ESC sequences followed by other characters, i.e. arrow keys
+        read -rsn 1 -t 1 tmp
+        if [[ "$tmp" == "[" ]]; then
+          read -rsn 1 -t 1 arrow
+          case "$arrow" in
+            $UP)
+              clear
+              selected="$(prev_local_workspace "${selected}")"
+              display_workspaces_with_selected "${selected}"
+              ;;
+            $DOWN)
+              clear
+              selected="$(next_local_workspace "${selected}")"
+              display_workspaces_with_selected "${selected}"
+              ;;
+          esac
+        fi
+        ;;
+      "d")
+        if [[ -n "${selected}" ]]; then
+          clear
+          # Note: prev/next is constrained to min/max
+          local after_delete_selection="$(next_local_workspace "${selected}")"
+          if [[ "${after_delete_selection}" == "${selected}"  ]]; then
+            after_delete_selection="$(prev_local_workspace "${selected}")"
+          fi
+          remove_workspaces "${selected}"
+
+          if [[ "${after_delete_selection}" == "${selected}" ]]; then
+            clear
+            leave_fullscreen
+            echo "All local workspaces have been deleted from disk."
+            exit
+          fi
+
+          selected="${after_delete_selection}"
+          display_workspaces_with_selected "${selected}"
+        fi
+        ;;
+      "k")
+        clear
+        selected="$(prev_local_workspace "${selected}")"
+        display_workspaces_with_selected "${selected}"
+        ;;
+      "j")
+        clear
+        selected="$(next_local_workspace "${selected}")"
+        display_workspaces_with_selected "${selected}"
+        ;;
+      "q")
+        clear
+        leave_fullscreen
+        exit
+        ;;
+      "")
+        # enter key returns empty string
+        leave_fullscreen
+        [[ -n "${selected}" ]] && activate "${selected}"
+        exit
+        ;;
+    esac
+  done
+}
+
+#
+# Move up a line and erase.
+#
+
+erase_line() {
+  printf "\033[1A\033[2K"
+}
+
+#
+# Activate <workspace>
+#
+
+activate() {
+  local workspace="$1"
+  local dir="$WORKSPACES_DIR/${workspace}"
+  cd $dir/src
+  bash --init-file $dir/bin/activate
+}
+
+#
+# Install <version>
+#
+
+create() {
+  [[ -z "$1" ]] && abort "workspace required"
+  local workspace
+  workspace="$1"
+
+  local dir="${WORKSPACES_DIR}/${workspace}"
+
+  if test -d "$dir"; then
+    if [[ ! -e "$dir/ws.lock" ]] ; then
+      if "$ACTIVATE" ; then
+        activate "${version}"
+      fi
+      exit
+    fi
+  fi
+
+  echo
+  log creating "${workspace}"
+
+  log mkdir "$dir"
+  mkdir -p "$dir" || abort "sudo required (or change ownership, or define WS_PREFIX)"
+  touch "$dir/ws.lock"
+  mkdir -p $dir/bin
+  mkdir -p $dir/src
+
+  cd "${dir}" || abort "Failed to cd to ${dir}"
+
+  cat << EOF > $dir/bin/activate
+# This file must be used with "source bin/activate" *from bash*
+# you cannot run it directly
+
+deactivate () {
+    # reset old environment variables
+    # ! [ -z \${VAR+_} ] returns true if VAR is declared at all
+    if ! [ -z "\${_OLD_WORKSPACE_PATH+_}" ] ; then
+        PATH="$_OLD_WORKSPACE_PATH"
+        export PATH
+        unset _OLD_WORKSPACE_PATH
+    fi
+
+    # This should detect bash and zsh, which have a hash command that must
+    # be called to get it to forget past commands.  Without forgetting
+    # past commands the \$PATH changes we made may not be respected
+    if [ -n "\${BASH-}" ] || [ -n "\${ZSH_VERSION-}" ] ; then
+        hash -r 2>/dev/null
+    fi
+
+    if ! [ -z "\${_OLD_WORKSPACE_PS1+_}" ] ; then
+        PS1="\$_OLD_WORKSPACE_PS1"
+        export PS1
+        unset _OLD_WORKSPACE_PS1
+    fi
+
+    unset WORKSPACE_PATH
+    if [ ! "\${1-}" = "nondestructive" ] ; then
+    # Self destruct!
+        unset -f deactivate
+    fi
+}
+
+# unset irrelevant variables
+deactivate nondestructive
+
+WORKSPACE_PATH="${dir}"
+export WORKSPACE_PATH
+WORKSPACE="${workspace}"
+export WORKSPACE
+
+_OLD_WORKSPACE_PATH="\$PATH"
+PATH="\$WORKSPACE_PATH/bin:\$PATH"
+export PATH
+
+if [ -z "\${WS_ENV_DISABLE_PROMPT-}" ] ; then
+    _OLD_WORKSPACE_PS1="\$PS1"
+    if [ "x" != x ] ; then
+        PS1="\$PS1"
+    else
+        PS1="(\`basename \"\$WORKSPACE_PATH\"\`) \$PS1"
+    fi
+    export PS1
+fi
+
+# This should detect bash and zsh, which have a hash command that must
+# be called to get it to forget past commands.  Without forgetting
+# past commands the \$PATH changes we made may not be respected
+if [ -n "\${BASH-}" ] || [ -n "\${ZSH_VERSION-}" ] ; then
+    hash -r 2>/dev/null
+fi
+EOF
+
+  rm -f "$dir/ws.lock"
+
+  if "$ACTIVATE" ; then
+    activate "${workspace}"
+  fi
+  echo
+}
+
+#
+# Synopsis: remove_workspaces workspace ...
+#
+
+function remove_workspaces() {
+  [[ -z "$1" ]] && abort "workspace(s) required"
+  while [[ $# -ne 0 ]]; do
+    local workspace
+    workspace="$1"
+    if [[ -n "${workspace}" ]]; then
+      local dir="${WORKSPACES_DIR}/${workspace}"
+      if [[ -s "${dir}" ]]; then
+        rm -rf "${dir}"
+      else
+        echo "$1 (${workspace}) not in workspaces directory"
+      fi
+    else
+      echo "No workspace found for '$1'"
+    fi
+    shift
+  done
+}
+
+#
+# Synopsis: prune_cache
+#
+
+function prune_cache() {
+  set_active_workspace
+
+  for folder_and_version in $(display_workspaces_paths); do
+    if [[ "${folder_and_version}" != "${g_active_workspace}" ]]; then
+      echo "${folder_and_version}"
+      rm -rf "${WORKSPACES_DIR:?}/${folder_and_version}"
+    fi
+  done
+}
+
+#
+# Synopsis: find_local_workspace workspace
+# Finds working directory for resolved workspace.
+# Globals modified:
+# - g_local_workspace
+
+function find_local_workspace() {
+  [[ -z "$1" ]] && abort "workspace required"
+  local workspace
+  workspace="$1"
+  [[ -n "${workspace}" ]] || abort "no workspace found for '$1'"
+
+  g_local_workspace="${WORKSPACES_DIR}/${workspace}"
+  [[ -d "${g_local_workspace}" ]] || abort "'$1' (${workspace}) not in workspaces dir"
+}
+
+#
+# Synopsis: display_bin_path_for_workspace version
+#
+
+function display_bin_path_for_workspace() {
+  find_local_workspace "$1"
+  echo "${g_local_workspace}/bin"
+}
+
+#
+# Synopsis: exec_with_workspace <version> command [args...]
+# Modify the path to include <version> and execute command.
+#
+
+function exec_with_workspace() {
+  find_local_workspace "$1"
+  shift # remove version from parameters
+  PATH="${g_local_workspace}/bin:$PATH" exec "$@"
+}
+
+#
+# Synopsis: show_permission_suggestions
+#
+
+function show_permission_suggestions() {
+  echo "Suggestions:"
+  echo "- run ws with sudo, or"
+  echo "- define WS_PREFIX to a writeable location, or"
+}
+
+#
+# Synopsis: show_diagnostics
+# Show environment and check for common problems.
+#
+
+function show_diagnostics() {
+  echo "This information is to help you diagnose issues, and useful when reporting an issue."
+  echo "Note: some output may contain passwords. Redact before sharing."
+
+  printf "\n\nCOMMAND LOCATIONS AND VERSIONS\n"
+
+  printf "\nbash\n"
+  command -v bash && bash --version
+
+  printf "\nws\n"
+  command -v ws && ws --version
+
+  printf "\nuname\n"
+  uname -a
+
+  printf "\n\nSETTINGS\n"
+
+  printf "\nws\n"
+  echo "workspace destination: ${WS_PREFIX}"
+  [[ -n "${WS_PREFIX}" ]] && echo "PATH: ${PATH}"
+
+  printf "\n\nCHECKS\n"
+
+  printf "\nChecking ws install destination is in PATH...\n"
+  local install_bin="${WS_PREFIX}/bin"
+  local path_wth_guards=":${PATH}:"
+  if [[ "${path_wth_guards}" =~ :${install_bin}/?: ]]; then
+    printf "good\n"
+  else
+    echo_red "'${install_bin}' is not in PATH"
+  fi
+
+  printf "\nChecking permissions for cache folder...\n"
+  # Most likely problem is ownership rather than than permissions as such.
+  local cache_root="${WS_PREFIX}/n"
+  if [[ -e "${WS_PREFIX}" && ! -w "${WS_PREFIX}" && ! -e "${cache_root}" ]]; then
+    echo_red "You do not have write permission to create: ${cache_root}"
+    show_permission_suggestions
+    echo "- make a folder you own:"
+    echo "      sudo mkdir -p \"${cache_root}\""
+    echo "      sudo chown $(whoami) \"${cache_root}\""
+  elif [[ -e "${cache_root}" && ! -w "${cache_root}" ]]; then
+    echo_red "You do not have write permission to: ${cache_root}"
+    show_permission_suggestions
+    echo "- change folder ownership to yourself:"
+    echo "      sudo chown -R $(whoami) \"${cache_root}\""
+  elif [[ ! -e "${cache_root}" ]]; then
+    echo "Cache folder does not exist: ${cache_root}"
+    echo "This is normal if you have not done an install yet, as cache is only created when needed."
+  elif [[ -e "${WORKSPACES_DIR}" && ! -w "${WORKSPACES_DIR}" ]]; then
+    echo_red "You do not have write permission to: ${WORKSPACES_DIR}"
+    show_permission_suggestions
+    echo "- change folder ownership to yourself:"
+    echo "      sudo chown -R $(whoami) \"${WORKSPACES_DIR}\""
+  else
+    echo "good"
+  fi
+
+  if [[ -e "${WS_PREFIX}" ]]; then
+    # Most likely problem is ownership rather than than permissions as such.
+    printf "\nChecking permissions for install folders...\n"
+    local install_writeable="true"
+    for subdir in bin lib include share; do
+      if [[ -e "${WS_PREFIX}/${subdir}" && ! -w "${WS_PREFIX}/${subdir}" ]]; then
+        install_writeable="false"
+        echo_red "You do not have write permission to: ${WS_PREFIX}/${subdir}"
+        break
+      fi
+    done
+    if [[ "${install_writeable}" = "true" ]]; then
+      echo "good"
+    else
+      show_permission_suggestions
+      echo "- change folder ownerships to yourself:"
+      echo "      (cd \"${WS_PREFIX}\" && sudo chown -R $(whoami) bin lib include share)"
+    fi
+  fi
+}
+
+#
+# Handle arguments.
+#
+
+# First pass. Process the options so they can come before or after commands,
+# which feel pretty natural.
+
+unprocessed_args=()
+
+while [[ $# -ne 0 ]]; do
+  case "$1" in
+    -V|--version) display_ws_version ;;
+    -h|--help|help) display_help; exit ;;
+    exec) unprocessed_args=("$@"); break ;;
+    run|as|use) unprocessed_args=("$@"); break ;;
+    *) unprocessed_args+=( "$1" ) ;;
+  esac
+  shift
+done
+
+set -- "${unprocessed_args[@]}"
+
+if test $# -eq 0; then
+  test -z "$(display_workspaces_paths)" && err_no_workspaces_print_help
+  menu_select_local_workspaces
+else
+  while test $# -ne 0; do
+    case "$1" in
+      bin|which) display_bin_path_for_workspace "$2"; exit ;;
+      run|as|use) shift; activate "$@"; exit ;;
+      exec) shift; exec_with_workspace "$@"; exit ;;
+      doctor) show_diagnostics; exit ;;
+      rm|-) shift; remove_workspaces "$@"; exit ;;
+      prune) prune_cache; exit ;;
+      ls|list) display_workspaces_paths; exit ;;
+      c|create) shift; create "$1"; exit ;;
+      *) create "$1"; exit ;;
+    esac
+    shift
+  done
+fi
