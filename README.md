@@ -2,7 +2,7 @@
 
 Workspace management: no subshells, no profile setup, **simply extensible**.
 
-![usage animation](http://nimit.io/images/n/n.gif)
+![usage animation](img/ws.gif)
 
 (Note: `ws` is not supported natively on Windows.)
 
