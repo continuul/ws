@@ -35,9 +35,9 @@ to install `ws` to `bin/ws` of the directory specified in the environment variab
 
 On Linux and macOS, [ws-install](https://github.com/continuul/ws-install) allows installation directly from GitHub; for instance:
 
-    curl -L https://git.io/ws-install | bash
+    curl -L https://raw.githubusercontent.com/continuul/ws-install/master/bin/ws-install | bash
 
-ws-install sets both `PREFIX` and `WS_PREFIX` to `$HOME/ws`, installs `ws` to `$HOME/ws/bin`, modifies the initialization files of supported shells to export `WS_PREFIX` and add `$HOME/ws/bin` to the `PATH`.
+ws-install sets `WS_PREFIX` to `$HOME/ws`, installs `ws` to `$HOME/ws/bin`, modifies the initialization files of supported shells to export `WS_PREFIX` and add `$HOME/ws/bin` to the `PATH`.
 
 ## Creating Workspaces
 
