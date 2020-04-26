@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 <a name="v1.4.0"></a>
 ## [v1.4.0] - 2020-04-26
 
+- Update documentation to new online installer.
 
 
 <a name="v1.3.0"></a>
