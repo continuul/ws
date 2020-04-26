@@ -19,7 +19,7 @@ Workspace management: no subshells, no profile setup, **simply extensible**.
 
 The easiest way to install `ws` is through the web:
 
-    curl -L https://git.io/ws-install | bash
+    curl -L https://git.io/ws-get | bash -s -- install
 
 Once installed, `ws` creates workspaces in subdirectory `ws/workspaces` of the directory specified in environment variable `WS_PREFIX`, which defaults to `$HOME/ws`.
 
@@ -33,11 +33,11 @@ to install `ws` to `bin/ws` of the directory specified in the environment variab
 
 ### Third Party Installers
 
-On Linux and macOS, [ws-install](https://github.com/continuul/ws-install) allows installation directly from GitHub; for instance:
+On Linux and macOS, [ws-get](https://github.com/continuul/ws-get) allows installation directly from GitHub; for instance:
 
-    curl -L https://raw.githubusercontent.com/continuul/ws-install/master/bin/ws-install | bash
+    curl -L https://raw.githubusercontent.com/continuul/ws-get/master/bin/ws-get | bash
 
-ws-install sets `WS_PREFIX` to `$HOME/ws`, installs `ws` to `$HOME/ws/bin`, modifies the initialization files of supported shells to export `WS_PREFIX` and add `$HOME/ws/bin` to the `PATH`.
+ws-get sets `WS_PREFIX` to `$HOME/ws`, installs `ws` to `$HOME/ws/bin`, modifies the initialization files of supported shells to export `WS_PREFIX` and add `$HOME/ws/bin` to the `PATH`.
 
 ## Creating Workspaces
 
