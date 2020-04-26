@@ -47,6 +47,9 @@ WS_PREFIX=${WS_PREFIX%/}
 readonly WS_PREFIX
 readonly WORKSPACES_DIR=$WS_PREFIX/workspaces
 
+# Set quiet mode to disable debug information
+quiet=1
+
 # Set by set_active_node
 g_active_workspace=
 
@@ -79,58 +82,7 @@ else
 fi
 
 #
-# Synopsis: is_lts_codename version
-#
-
-function is_lts_codename() {
-  # https://github.com/nodejs/Release/blob/master/CODENAMES.md
-  # e.g. argon, Boron
-  [[ "$1" =~ ^([Aa]rgon|[Bb]oron|[Cc]arbon|[Dd]ubnium|[Ee]rbium|[Ff]ermium|[Gg]allium|[Hh]ydrogen|[Ii]ron)$ ]]
-}
-
-#
-# Synopsis: is_download_folder version
-#
-
-function is_download_folder() {
-  # e.g. nightly
-  [[ "$1" =~ ^(chakracore-nightly|chakracore-rc|chakracore-release|next-nightly|nightly|rc|release|test|v8-canary)$ ]]
-}
-
-#
-# Synopsis: is_download_version version
-#
-
-function is_download_version() {
-  # e.g. nightly/, nightly/latest, nightly/v11
-  if [[ "$1" =~ ^([^/]+)/(.*) ]]; then
-    local remote_folder="${BASH_REMATCH[1]}"
-    is_download_folder "${remote_folder}"
-    return
-  fi
-  return 2
-}
-
-#
-# Synopsis: is_numeric_version version
-#
-
-function is_numeric_version() {
-  # e.g. 6, v7.1, 8.11.3
-  [[ "$1" =~ ^[v]{0,1}[0-9]+(\.[0-9]+){0,2}$ ]]
-}
-
-#
-# Synopsis: is_exact_numeric_version version
-#
-
-function is_exact_numeric_version() {
-  # e.g. 6, v7.1, 8.11.3
-  [[ "$1" =~ ^[v]{0,1}[0-9]+\.[0-9]+\.[0-9]+$ ]]
-}
-
-#
-# Functions used when showing versions installed
+# Functions used when showing workspaces installed
 #
 
 enter_fullscreen() {
@@ -174,30 +126,27 @@ Commands:
 
   ws                              Display local workspaces and activate selection
   ws <workspace>                  Create workspace <workspace> (downloading plugins if necessary)
-  ws run <workspace> [args ...]   Execute downloaded node <version> with [args ...]
+  ws use <workspace>              Activate the workspace <workspace>
   ws which <workspace>            Output path for local workspace
-  ws exec <work> <cmd> [args...]  Execute command with modified PATH, so downloaded node <version> and npm first
+  ws exec <work> <cmd> [args...]  Execute command with modified PATH, so downloaded applications first
   ws rm <workspace ...>           Remove the given workspace(s)
-  ws prune                        Remove all downloaded versions except the installed version
-  ws --latest                     Output the latest node version available
-  ws --lts                        Output the latest LTS node version available
+  ws prune                        Remove all created workspaces except the activated workspace
   ws ls                           Output list of workspaces
-  ws uninstall                    Remove the installed node and npm
+  ws uninstall                    Remove the installed ws
 
 Options:
 
   -V, --version         Output version of ws
   -h, --help            Display help information
   -q, --quiet           Disable curl output (if available)
-  --insecure            Turn off certificate checking for https requests (may be needed from behind a proxy server)
 
 Aliases:
 
+  use: activate, switch
   which: bin
-  run: use, as
-  ls: list
+  exec: as, run
   rm: -
-  latest: current
+  ls: list
 
 EOF
 }
@@ -208,8 +157,8 @@ err_no_workspaces_print_help() {
 }
 
 #
-# Synopsis: next_local_workspace selected_version
-# Output version after selected (which may be blank under some circumstances).
+# Synopsis: next_local_workspace selected_workspace
+# Output workspace after selected (which may be blank under some circumstances).
 #
 
 function next_local_workspace() {
@@ -217,8 +166,8 @@ function next_local_workspace() {
 }
 
 #
-# Synopsis: prev_local_workspace selected_version
-# Output version before selected  (which may be blank under some circumstances).
+# Synopsis: prev_local_workspace selected_workspace
+# Output workspace before selected  (which may be blank under some circumstances).
 #
 
 function prev_local_workspace() {
@@ -249,7 +198,7 @@ function set_active_workspace() {
 }
 
 #
-# Display sorted versions directories paths.
+# Display sorted workspaces directories paths.
 #
 
 display_workspaces_paths() {
@@ -281,8 +230,8 @@ display_workspaces_with_selected() {
 #
 
 function display_local_workspaces() {
-  for folder_and_version in $(display_workspaces_paths); do
-    echo "${folder_and_version}"
+  for folder_and_workspace in $(display_workspaces_paths); do
+    echo "${folder_and_workspace}"
   done
 }
 
@@ -389,25 +338,30 @@ erase_line() {
 activate() {
   local workspace="$1"
   local dir="$WORKSPACES_DIR/${workspace}"
-  cd $dir/src
-  bash --init-file $dir/bin/activate
+  (( quiet )) || echo "workspace: '$@'"
+  cd "${dir}/src"
+  bash --init-file "${dir}/bin/activate"
 }
 
 #
-# Install <version>
+# Install <workspace>
 #
 
 create() {
+  (( quiet )) || echo "create: $@"
   [[ -z "$1" ]] && abort "workspace required"
   local workspace
   workspace="$1"
 
   local dir="${WORKSPACES_DIR}/${workspace}"
 
+  (( quiet )) || echo "checking for existing workspace: ${dir}"
   if test -d "$dir"; then
+    (( quiet )) || echo "checking for workspace lock: $dir/ws.lock"
     if [[ ! -e "$dir/ws.lock" ]] ; then
+      (( quiet )) || echo "checking for workspace lock: $dir/ws.lock"
       if "$ACTIVATE" ; then
-        activate "${version}"
+        activate "${workspace}"
       fi
       exit
     fi
@@ -525,10 +479,10 @@ function remove_workspaces() {
 function prune_cache() {
   set_active_workspace
 
-  for folder_and_version in $(display_workspaces_paths); do
-    if [[ "${folder_and_version}" != "${g_active_workspace}" ]]; then
-      echo "${folder_and_version}"
-      rm -rf "${WORKSPACES_DIR:?}/${folder_and_version}"
+  for folder_and_workspace in $(display_workspaces_paths); do
+    if [[ "${folder_and_workspace}" != "${g_active_workspace}" ]]; then
+      echo "${folder_and_workspace}"
+      rm -rf "${WORKSPACES_DIR:?}/${folder_and_workspace}"
     fi
   done
 }
@@ -550,7 +504,7 @@ function find_local_workspace() {
 }
 
 #
-# Synopsis: display_bin_path_for_workspace version
+# Synopsis: display_bin_path_for_workspace workspace
 #
 
 function display_bin_path_for_workspace() {
@@ -559,13 +513,13 @@ function display_bin_path_for_workspace() {
 }
 
 #
-# Synopsis: exec_with_workspace <version> command [args...]
-# Modify the path to include <version> and execute command.
+# Synopsis: exec_with_workspace <workspace> command [args...]
+# Modify the path to include <workspace> and execute command.
 #
 
 function exec_with_workspace() {
   find_local_workspace "$1"
-  shift # remove version from parameters
+  shift # remove workspace from parameters
   PATH="${g_local_workspace}/bin:$PATH" exec "$@"
 }
 
@@ -690,10 +644,12 @@ if test $# -eq 0; then
   menu_select_local_workspaces
 else
   while test $# -ne 0; do
+    (( quiet )) || echo "args: $@"
+    (( quiet )) || echo "parameter: $1"
     case "$1" in
       bin|which) display_bin_path_for_workspace "$2"; exit ;;
-      run|as|use) shift; activate "$@"; exit ;;
-      exec) shift; exec_with_workspace "$@"; exit ;;
+      activate|switch|use) shift; activate "$@"; exit ;;
+      as|exec|run) shift; exec_with_workspace "$@"; exit ;;
       doctor) show_diagnostics; exit ;;
       rm|-) shift; remove_workspaces "$@"; exit ;;
       prune) prune_cache; exit ;;
