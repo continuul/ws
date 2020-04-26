@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
 
 
 <a name="v1.4.0"></a>
-## [v1.4.0] - 0001-01-01
+## [v1.4.0] - 2020-04-26
 
 
 
@@ -30,11 +30,6 @@ All notable changes to this project will be documented in this file.
 - Rewrite to properly support selection, add more usability features.
 
 
-<a name="stable"></a>
-## [stable] - 2020-04-16
-
-
-
 <a name="v1.1.2"></a>
 ## [v1.1.2] - 2020-04-16
 
@@ -45,11 +40,6 @@ All notable changes to this project will be documented in this file.
 ## [v1.1.1] - 2019-10-23
 
 - Release 1.1.1
-
-
-<a name="va.b.c"></a>
-## [va.b.c] - 2019-10-23
-
 - Release a.b.c
 - fix ws script indent
 
@@ -126,11 +116,9 @@ All notable changes to this project will be documented in this file.
 [Unreleased]: https://github.com/continuul/ws/compare/v1.4.0...HEAD
 [v1.4.0]: https://github.com/continuul/ws/compare/v1.3.0...v1.4.0
 [v1.3.0]: https://github.com/continuul/ws/compare/v1.2.0...v1.3.0
-[v1.2.0]: https://github.com/continuul/ws/compare/stable...v1.2.0
-[stable]: https://github.com/continuul/ws/compare/v1.1.2...stable
+[v1.2.0]: https://github.com/continuul/ws/compare/v1.1.2...v1.2.0
 [v1.1.2]: https://github.com/continuul/ws/compare/v1.1.1...v1.1.2
-[v1.1.1]: https://github.com/continuul/ws/compare/va.b.c...v1.1.1
-[va.b.c]: https://github.com/continuul/ws/compare/v1.1.0...va.b.c
+[v1.1.1]: https://github.com/continuul/ws/compare/v1.1.0...v1.1.1
 [v1.1.0]: https://github.com/continuul/ws/compare/v1.0.6...v1.1.0
 [v1.0.6]: https://github.com/continuul/ws/compare/v1.0.5...v1.0.6
 [v1.0.5]: https://github.com/continuul/ws/compare/v1.0.4...v1.0.5
