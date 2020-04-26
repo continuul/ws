@@ -7,6 +7,18 @@ All notable changes to this project will be documented in this file.
 
 
 
+<a name="v1.3.0"></a>
+## [v1.3.0] - 2020-04-26
+
+- Improve tooling; added lint target to Makefile to allow pre-commit linting and formatting. Add debug output to script to aid in debugging issues. Remove unused bash functions. Fix command line output so that it displays proper commands and aliases. Improve ws script comments by changing 'version' to 'workspace'. Fix ACTIVATE under create when workspace already exists; change 'version' to 'workspace'; variable name incorrect.
+- Update the animaged Gif.
+- Update README to reference ws-install installer.
+- Update makefile to have help, and to (un)install the product.
+- Update README index.
+- Add gif
+- Add gif
+
+
 <a name="v1.2.0"></a>
 ## [v1.2.0] - 2020-04-24
 
@@ -106,7 +118,8 @@ All notable changes to this project will be documented in this file.
 - Initial commit
 
 
-[Unreleased]: https://github.com/continuul/ws/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/continuul/ws/compare/v1.3.0...HEAD
+[v1.3.0]: https://github.com/continuul/ws/compare/v1.2.0...v1.3.0
 [v1.2.0]: https://github.com/continuul/ws/compare/stable...v1.2.0
 [stable]: https://github.com/continuul/ws/compare/v1.1.2...stable
 [v1.1.2]: https://github.com/continuul/ws/compare/v1.1.1...v1.1.2
