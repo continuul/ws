@@ -38,3 +38,8 @@ install: bin/ws
 .PHONY: uninstall
 uninstall:
 	rm -f $(WS_PREFIX)/bin/ws
+
+#:help: version     | Show the next version
+.PHONY: version
+version:
+	@echo $(VERSION)

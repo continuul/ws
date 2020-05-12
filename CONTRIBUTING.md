@@ -20,6 +20,8 @@ Don't change the version number or CHANGELOG, as they are updated by maintainers
 
 To contribute, please install and use the following tools:
 
-- [pre-commit][pre-commit]
+- [git-chglog][git-chglog] - CHANGELOG generator implemented in Go
+- [pre-commit][pre-commit] - Git hook scripts useful for identifying simple issues before submission to code review
 
   [pre-commit]: https://pre-commit.com/
+  [git-chglog]: https://github.com/git-chglog/git-chglog
