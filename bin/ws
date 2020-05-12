@@ -450,6 +450,21 @@ EOF
 }
 
 #
+# Synopsis: move_workspace source target
+#
+
+function move_workspace() {
+  [[ $# -ne 2 ]] && abort "both source and target workspaces required"
+  local source="${WORKSPACES_DIR}/${1}"
+  if [[ -s "${source}" ]]; then
+    local target="${WORKSPACES_DIR}/${2}"
+    mv "${source}" "${target}"
+  else
+    echo "$1 (${source}) not in workspaces directory"
+  fi
+}
+
+#
 # Synopsis: remove_workspaces workspace ...
 #
 
@@ -651,6 +666,7 @@ else
       activate|switch|use) shift; activate "$@"; exit ;;
       as|exec|run) shift; exec_with_workspace "$@"; exit ;;
       doctor) show_diagnostics; exit ;;
+      mv|move) shift; move_workspace "$@"; exit ;;
       rm|-) shift; remove_workspaces "$@"; exit ;;
       prune) prune_cache; exit ;;
       ls|list) display_workspaces_paths; exit ;;
