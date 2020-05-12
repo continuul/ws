@@ -40,7 +40,7 @@ function echo_red() {
 # Setup and state
 #
 
-VERSION="v1.2.0"
+VERSION="ERROR: Branch must be updated with master for final versions"
 
 WS_PREFIX="${WS_PREFIX-$HOME/ws}"
 WS_PREFIX=${WS_PREFIX%/}
