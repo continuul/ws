@@ -7,6 +7,22 @@ All notable changes to this project will be documented in this file.
 
 
 
+<a name="v1.7.0"></a>
+## [v1.7.0] - 0001-01-01
+
+
+
+<a name="v1.6.0"></a>
+## [v1.6.0] - 2020-05-12
+
+- Add a release document, and a version target in the Makefile.
+
+
+<a name="v1.5.0"></a>
+## [v1.5.0] - 2020-05-11
+
+
+
 <a name="v1.4.0"></a>
 ## [v1.4.0] - 2020-05-11
 
@@ -115,7 +131,10 @@ All notable changes to this project will be documented in this file.
 - Initial commit
 
 
-[Unreleased]: https://github.com/continuul/ws/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/continuul/ws/compare/v1.7.0...HEAD
+[v1.7.0]: https://github.com/continuul/ws/compare/v1.6.0...v1.7.0
+[v1.6.0]: https://github.com/continuul/ws/compare/v1.5.0...v1.6.0
+[v1.5.0]: https://github.com/continuul/ws/compare/v1.4.0...v1.5.0
 [v1.4.0]: https://github.com/continuul/ws/compare/v1.3.0...v1.4.0
 [v1.3.0]: https://github.com/continuul/ws/compare/v1.2.0...v1.3.0
 [v1.2.0]: https://github.com/continuul/ws/compare/v1.1.2...v1.2.0
