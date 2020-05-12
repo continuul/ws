@@ -1,7 +1,6 @@
 ---
 name: Support
 about: Got a problem?
-
 ---
 
 # Problem

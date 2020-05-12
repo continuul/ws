@@ -1,7 +1,6 @@
 ---
 name: Bug Report
 about: Found a bug?
-
 ---
 
 # Bug Report
