@@ -8,8 +8,9 @@ All notable changes to this project will be documented in this file.
 
 
 <a name="v1.4.0"></a>
-## [v1.4.0] - 2020-04-26
+## [v1.4.0] - 2020-05-11
 
+- Add support for workspace move.
 - Update documentation to new online installer.
 
 
