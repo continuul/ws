@@ -61,6 +61,22 @@ Execute `ws` on its own to view your workspaces, and select the desired workspac
 
 If the active workspace does not change after install, try opening a new shell in case seeing a stale workspace.
 
+## Renaming Workspaces
+
+It is occasionally useful to rename a workspace. There are two straight-forward
+methods to accomplish this; the less easy, and very easy.
+
+The hard way is the following. Knowing that `WS_HOME` (`WS_PREFIX`) is the home
+directory for all your workspaces, simply run a shell `mv` command to move the
+workspace directory:
+
+    mv $WS_HOME/workspaces/source $WS_HOME/workspaces/target
+
+The easy (and equivalent) way is the following. If a `<source>` workspace
+already exists and you want to rename it to `<target>`:
+
+    ws mv <source> <target>
+
 ## Removing Workspaces
 
 Remove some cached versions:
