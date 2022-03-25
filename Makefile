@@ -28,11 +28,21 @@ release:
 	@semtag final -s minor
 	@git push --follow-tags
 
+objects = $(WS_PREFIX)/bin/ws $(WS_PREFIX)/etc/checkout-ws.once $(WS_PREFIX)/etc/golang.activation
+
+$(WS_PREFIX)/bin/%: bin/%
+	mkdir -p $(@D)
+	cp -f $< $@
+
+$(WS_PREFIX)/etc/%: etc/%
+	mkdir -p $(@D)
+	cp -f $< $@
+
+$(objects):
+
 #:help: install     | Installs the product, leaving the workspaces behind.
 .PHONY: install
-install: bin/ws
-	mkdir -p $(WS_PREFIX)/$(dir $<)
-	cp $< $(WS_PREFIX)/$<
+install: $(WS_PREFIX)/bin/ws $(objects)
 
 #:help: uninstall   | Uninstalls the product, leaving the workspaces behind.
 .PHONY: uninstall

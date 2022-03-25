@@ -15,6 +15,17 @@ Workspace management: no subshells, no profile setup, **simply extensible**.
     - [Miscellaneous](#miscellaneous)
     - [Optional Environment Variables](#optional-environment-variables)
 
+## Prerequisites
+
+If you are on Mac you MUST have these dependencies installed first:
+
+- homebrew
+    - coreutils
+    - tree
+- git
+- golang (optional)
+- java (optional)
+
 ## Installation
 
 The easiest way to install `ws` is through the web:
