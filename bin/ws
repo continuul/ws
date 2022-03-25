@@ -40,7 +40,7 @@ function echo_red() {
 # Setup and state
 #
 
-VERSION="v1.6.0"
+VERSION="v1.7.0"
 
 WS_PREFIX="${WS_PREFIX-$HOME/ws}"
 WS_PREFIX=${WS_PREFIX%/}
