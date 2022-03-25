@@ -1,2 +1,4 @@
-export GOPATH=$WS_ENV
+export GOBIN=$(go env GOPATH)/bin
+export GOROOT=/usr/local/go
+export GOPATH=${WORKSPACE_PATH}
 export PATH="$GOPATH/bin:/usr/local/go/bin:$PATH"
