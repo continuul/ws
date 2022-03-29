@@ -22,6 +22,11 @@ changelog:
 	@git-chglog -o CHANGELOG.md --next-tag $(VERSION)
 	@git add CHANGELOG.md && git commit -m "Updated CHANGELOG"
 
+#:help: precommit   | Lint the project files using pre-commit
+.PHONY: precommit
+precommit:
+	pre-commit run --all-files
+
 #:help: release     | Release the product, setting the tag and pushing.
 .PHONY: release
 release:
