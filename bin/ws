@@ -340,7 +340,17 @@ activate() {
   local dir="$WORKSPACES_DIR/${workspace}"
   (( quiet )) || echo "workspace: '$@'"
   cd "${dir}/src"
-  bash --init-file "${dir}/bin/activate"
+
+  local shell_name="${SHELL##*/}"
+
+  if [[ "$shell_name" == "zsh" ]]; then
+    zsh --no-rcs -c "source '${dir}/bin/activate'; exec zsh"
+  elif [[ "$shell_name" == "bash" ]]; then
+    bash --init-file "${dir}/bin/activate"
+  else
+    echo "Unsupported shell: $shell_name"
+    return 1
+  fi
 }
 
 #
