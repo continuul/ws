@@ -334,9 +334,17 @@ erase_line() {
 
 activate() {
   local workspace="$1"
+  if ! validate_workspace_name "${workspace}"; then
+    printf "ws: %s: Invalid workspace name\n" "${workspace}" >&2
+    return 1
+  fi
   local dir="$WORKSPACES_DIR/${workspace}"
+  if [[ ! -d "${dir}/src" ]]; then
+    printf "ws: %s: Workspace source directory does not exist\n" "${workspace}" >&2
+    return 1
+  fi
   (( quiet )) || echo "workspace: '$@'"
-  cd "${dir}/src"
+  cd "${dir}/src" || return 1
 
   local shell_name="${SHELL##*/}"
 
