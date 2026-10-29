@@ -94,12 +94,6 @@ Remove some cached versions:
 
     ws rm buffalo
 
-Remove the installed node and npm (does not affect the cached version). This can be useful
-to revert to the system version of node (if in a different location), or if you no longer
-wish to use node and npm, or are switching to a different way of managing them.
-
-    ws uninstall
-
 ## Miscellaneous
 
 Command line help can be obtained from `ws --help`.

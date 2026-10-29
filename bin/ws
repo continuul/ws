@@ -131,13 +131,11 @@ Commands:
   ws exec <work> <cmd> [args...]  Execute command with modified PATH, so downloaded applications first
   ws rm <workspace ...>           Remove the given workspace(s)
   ws ls                           Output list of workspaces
-  ws uninstall                    Remove the installed ws
 
 Options:
 
   -V, --version         Output version of ws
   -h, --help            Display help information
-  -q, --quiet           Disable curl output (if available)
 
 Aliases:
 
