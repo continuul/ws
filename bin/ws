@@ -483,17 +483,40 @@ EOF
 }
 
 #
+# Synopsis: validate_workspace_name name
+# Returns success if name is a single path component.
+#
+
+function validate_workspace_name() {
+  local name="$1"
+  [[ -n "${name}" && "${name}" != "." && "${name}" != ".." && "${name}" != */* ]]
+}
+
+#
 # Synopsis: move_workspace source target
 #
 
 function move_workspace() {
   [[ $# -ne 2 ]] && abort "both source and target workspaces required"
+  if ! validate_workspace_name "$1"; then
+    printf "ws mv: %s: Invalid workspace name\n" "$1" >&2
+    return 1
+  fi
+  if ! validate_workspace_name "$2"; then
+    printf "ws mv: %s: Invalid workspace name\n" "$2" >&2
+    return 1
+  fi
   local source="${WORKSPACES_DIR}/${1}"
   if [[ -s "${source}" ]]; then
     local target="${WORKSPACES_DIR}/${2}"
+    if [[ -L "${target}" ]]; then
+      printf "Error: target workspace must not be a symbolic link: '%s'\n" "$2" >&2
+      return 1
+    fi
     mv "${source}" "${target}"
   else
-    echo "$1 (${source}) not in workspaces directory"
+    printf "Error: %s (%s) not in workspaces directory\n" "$1" "${source}" >&2
+    return 1
   fi
 }
 
@@ -503,21 +526,26 @@ function move_workspace() {
 
 function remove_workspaces() {
   [[ -z "$1" ]] && abort "workspace(s) required"
+  local result=0
   while [[ $# -ne 0 ]]; do
     local workspace
     workspace="$1"
-    if [[ -n "${workspace}" ]]; then
-      local dir="${WORKSPACES_DIR}/${workspace}"
-      if [[ -s "${dir}" ]]; then
-        rm -rf "${dir}"
-      else
-        echo "$1 (${workspace}) not in workspaces directory"
-      fi
+    if ! validate_workspace_name "${workspace}"; then
+      printf "ws rm: %s: Invalid workspace name\n" "${workspace}" >&2
+      result=1
+      shift
+      continue
+    fi
+    local dir="${WORKSPACES_DIR}/${workspace}"
+    if [[ -s "${dir}" ]]; then
+      rm -rf "${dir}" || result=1
     else
-      echo "No workspace found for '$1'"
+      printf "ws rm: %s: No such workspace\n" "${workspace}" >&2
+      result=1
     fi
     shift
   done
+  return "${result}"
 }
 
 #
