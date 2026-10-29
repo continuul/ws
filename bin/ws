@@ -130,7 +130,6 @@ Commands:
   ws which <workspace>            Output path for local workspace
   ws exec <work> <cmd> [args...]  Execute command with modified PATH, so downloaded applications first
   ws rm <workspace ...>           Remove the given workspace(s)
-  ws prune                        Remove all created workspaces except the activated workspace
   ws ls                           Output list of workspaces
   ws uninstall                    Remove the installed ws
 
@@ -549,21 +548,6 @@ function remove_workspaces() {
 }
 
 #
-# Synopsis: prune_cache
-#
-
-function prune_cache() {
-  set_active_workspace
-
-  for folder_and_workspace in $(display_workspaces_paths); do
-    if [[ "${folder_and_workspace}" != "${g_active_workspace}" ]]; then
-      echo "${folder_and_workspace}"
-      rm -rf "${WORKSPACES_DIR:?}/${folder_and_workspace}"
-    fi
-  done
-}
-
-#
 # Synopsis: find_local_workspace workspace
 # Finds working directory for resolved workspace.
 # Globals modified:
@@ -729,7 +713,6 @@ else
       doctor) show_diagnostics; exit ;;
       mv|move) shift; move_workspace "$@"; exit ;;
       rm|-) shift; remove_workspaces "$@"; exit ;;
-      prune) prune_cache; exit ;;
       ls|list) display_workspaces_paths; exit ;;
       c|create) shift; create "$1"; exit ;;
       *) create "$1"; exit ;;
