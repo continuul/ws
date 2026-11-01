@@ -1,3 +1,6 @@
+**PERMENTENTLY MOVED**:
+https://github.com/pre-cursor/ws
+
 # `ws` – Interactively Manage Your Development Workspaces
 
 Workspace management: no subshells, no profile setup, **simply extensible**.
